@@ -12,12 +12,21 @@
             </div>
             <div class="sidebar-section-children-container">
 
-                <?js 
-                section.items.forEach(function(item) { ?>
+                <?js
+                section.items.forEach(function(item) {
+?>
                     <div class="sidebar-section-children">
                         <?js= item.anchor ?>
+
+                        <?js if(item.children.length > 0) { ?>
+                            <div class="sidebar-section-children-container-children">
+                              <?js item.children.forEach(function(child) { ?>
+                                <?js= child.anchor ?>
+                              <?js }); ?>
+                            </div>
+                        <?js } ?>
+
                     </div>
-                    
                 <?js }) ?>
             </div>
 

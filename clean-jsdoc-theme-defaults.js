@@ -8,6 +8,9 @@ const SECTION_TYPE = {
     Tutorials: 'Tutorials',
     Interfaces: 'Interfaces',
     Global: 'Global',
+    Hooks: 'Hooks',
+    HooksPHP: 'HooksPHP',
+    HooksJS: 'HooksJS',
 };
 
 const defaultSections = [
@@ -20,6 +23,9 @@ const defaultSections = [
     SECTION_TYPE.Tutorials,
     SECTION_TYPE.Interfaces,
     SECTION_TYPE.Global,
+    SECTION_TYPE.Hooks,
+    SECTION_TYPE.HooksPHP,
+    SECTION_TYPE.HooksJS,
 ];
 
 const HTML_MINIFY_OPTIONS = {

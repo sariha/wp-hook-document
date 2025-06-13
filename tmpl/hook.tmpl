@@ -1,0 +1,53 @@
+<?js
+var data = obj;
+var self = this;
+?>
+
+<?js if (data.description) { ?>
+    <div class="description">
+        <?js= data.description ?>
+    </div>
+<?js } ?>
+
+<?js if (data.params && params.length ) { ?>
+    <div class="method-member-container flex flex-col w-100 overflow-auto mt-20 ">
+        <h2 class="has-anchor" id="parameters">Parameters</h2>
+        <?js= this.partial('params.tmpl', params) ?>
+    </div>
+<?js } ?>
+
+<?js= this.partial('details.tmpl', data) ?>
+
+<?js if (data.requires && data.requires.length) { ?>
+    <div class="method-member-container flex flex-col w-100 overflow-auto mt-20">
+        <strong>Requires:</strong>
+        <ul>
+            <?js data.requires.forEach(function(r) { ?>
+                <li><?js= self.linkto(r) ?></li>
+            <?js }); ?>
+        </ul>
+    </div>
+<?js } ?>
+
+<?js if (data.returns && returns.length) { ?>
+    <div class="method-member-container mt-20">
+    <strong>Returns:</strong>
+        <?js if (returns.length > 1) { ?>
+            <ul>
+                <?js returns.forEach(function(r) { ?>
+                    <li><?js= self.partial('returns.tmpl', r) ?></li>
+                <?js }); ?>
+            </ul>
+
+        <?js } else { returns.forEach(function(r) { ?>
+            <?js= self.partial('returns.tmpl', r) ?>
+            <?js });} ?>
+    </div>
+<?js } ?>
+
+<?js if (data.examples && examples.length) { ?>
+    <div class="method-member-container flex flex-col w-100 overflow-auto mt-20">
+        <strong>Example<?js= examples.length > 1? 's':'' ?></strong>
+        <?js= this.partial('examples.tmpl', examples) ?>
+    </div>
+<?js } ?>

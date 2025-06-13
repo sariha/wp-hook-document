@@ -67,8 +67,36 @@ function find(spec) {
     return helper.find(data, spec);
 }
 
-function tutoriallink(tutorial) {
-    return helper.toTutorial(tutorial, null, {
+
+function tutorialLongToName(tutorial ) {
+    //replace _ or - with space in the tutorial name
+    let content = tutorial.replace(/_/g, ' ').replace(/-/g, ' ');
+
+    // Remove any leading numbers and dots (e.g., "1.", "2.")
+    content = content.replace(/^\d+\.*/, '');
+
+    content = content
+        .split(' ')
+        .map((word) => {
+            // Remove any leading numbers and dots (e.g., "1.", "2.")
+            word.replace(/^\d+\.*/, '');
+            // Capitalize the first letter of each word
+            return word.charAt(0).toUpperCase() + word.slice(1);
+        })
+        .join(' ');
+
+    return content;
+}
+
+function tutoriallink(tutorial, longname) {
+
+    let content = tutorialLongToName( tutorial );
+
+    if( !longname ) {
+        longname = tutorial;
+    }
+
+    return helper.toTutorial(longname, content, {
         tag: 'em',
         classname: 'disabled',
         prefix: 'Tutorial: ',
@@ -96,7 +124,7 @@ function needsSignature({ kind, type, meta }) {
     let needsSig = false;
 
     // function and class definitions always get a signature
-    if (kind === 'function' || kind === 'class') {
+    if ( [ 'function', 'class', 'hook' ].includes(kind) ) {
         needsSig = true;
     }
 
@@ -419,12 +447,12 @@ function attachModuleSymbols(doclets, modules) {
 }
 
 function buildSidebarMembers({
-    items,
-    itemHeading,
-    itemsSeen,
-    linktoFn,
-    sectionName,
-}) {
+     items,
+     itemHeading,
+     itemsSeen,
+     linktoFn,
+     sectionName,
+ }) {
     const navProps = {
         name: itemHeading,
         items: [],
@@ -432,48 +460,69 @@ function buildSidebarMembers({
     };
 
     if (items.length) {
-        items.forEach(function (item) {
-            const currentItem = {
-                name: item.name,
-                anchor: item.longname
-                    ? linktoFn(item.longname, item.name)
-                    : linktoFn('', item.name),
-                children: [],
-            };
+        // Si nous traitons des tutoriels, créer une structure hiérarchique basée sur les tirets
+        if (sectionName === SECTION_TYPE.Tutorials) {
+            // Créer un objet pour stocker les catégories parentes
+            const parentCategories = {};
 
-            const methods =
-                sectionName === SECTION_TYPE.Tutorials ||
-                sectionName === SECTION_TYPE.Global
-                    ? []
-                    : find({
-                          kind: 'function',
-                          memberof: item.longname,
-                          inherited: {
-                              '!is': Boolean(themeOpts.exclude_inherited),
-                          },
-                      });
+            items.forEach(function (item) {
+                // Vérifier si le nom contient un tiret
+                if (item.name.includes('-')) {
+                    // Diviser le nom par le tiret
+                    const parts = item.name.split('-');
+                    const parentName = tutorialLongToName( parts[0].trim() ); // Premier élément comme parent
+                    const childName = parts.slice(1).join('-').trim(); // Le reste comme enfant
 
-            if (!hasOwnProp.call(itemsSeen, item.longname)) {
-                currentItem.anchor = linktoFn(
-                    item.longname,
-                    item.name.replace(/^module:/, '')
-                );
-
-                if (methods.length) {
-                    methods.forEach(function (method) {
-                        const itemChild = {
-                            name: method.longName,
-                            link: linktoFn(method.longname, method.name),
+                    // Créer la catégorie parente si elle n'existe pas encore
+                    if (!parentCategories[parentName]) {
+                        parentCategories[parentName] = {
+                            name: parentName,
+                            anchor: '', // Pas de lien pour la catégorie parente
+                            children: [],
+                            type: '',
                         };
+                        navProps.items.push(parentCategories[parentName]);
+                    }
 
-                        currentItem.children.push(itemChild);
+                    // Ajouter l'élément enfant à la catégorie parente
+                    parentCategories[parentName].children.push({
+                        // remove the prefix parentName from childName
+                        name: childName,
+                        anchor: item.longname
+                            ? linktoFn(item.longname, childName)
+                            : linktoFn('', item.name),
+                        children: [],
+                        type: item.hookType ? item.hookType : '',
                     });
-                }
-                itemsSeen[item.longname] = true;
-            }
+                } else {
+                    // Pour les éléments sans tiret, les ajouter normalement
+                    const currentItem = {
+                        name: item.name,
+                        anchor: item.longname
+                            ? linktoFn(item.longname, item.name)
+                            : linktoFn('', item.name),
+                        children: [],
+                        type: item.hookType ? item.hookType : '',
+                    };
 
-            navProps.items.push(currentItem);
-        });
+                    navProps.items.push(currentItem);
+                }
+            });
+        } else {
+            // Pour les sections autres que les tutoriels, conserver le comportement d'origine
+            items.forEach(function (item) {
+                const currentItem = {
+                    name: item.name,
+                    anchor: item.longname
+                        ? linktoFn(item.longname, item.name)
+                        : linktoFn('', item.name),
+                    children: [],
+                    type: item.hookType ? item.hookType : '',
+                };
+
+                navProps.items.push(currentItem);
+            });
+        }
     }
 
     return navProps;
@@ -492,11 +541,24 @@ function buildSearchListForData() {
 }
 
 function linktoTutorial(longName, name) {
-    return tutoriallink(name);
+    return tutoriallink(name, longName);
 }
 
 function linktoExternal(longName, name) {
     return linkto(longName, name.replace(/(^"|"$)/g, ''));
+}
+
+function LinktoHook(longName, name) {
+
+    //regex to extract the hook type (Action or Filter) and the hook name
+    const hookTypeMatch = longName.match(/^(PHP|JS)_(action|filter)_(.+)$/);
+    if (!hookTypeMatch) {
+        return linkto(longName, name);
+    }
+
+    const hookType = hookTypeMatch[2]; // action or filter
+    const nameModified = `<span class="hook-type hook-type-${hookType}">${hookType}</span> ${name}`;
+    return linkto(longName, nameModified);
 }
 
 /**
@@ -553,6 +615,9 @@ function buildSidebar(members) {
     const seen = {};
     const seenTutorials = {};
     const seenGlobal = {};
+    const seenHooks = {};
+    const seenHooksPHP = {};
+    const seenHooksJS = {};
 
     const sectionsOrder = themeOpts.sections || defaultSections;
 
@@ -628,7 +693,33 @@ function buildSidebar(members) {
             linktoFn: linkto,
             sectionName: SECTION_TYPE.Global,
         }),
+
+        [SECTION_TYPE.Hooks]: buildSidebarMembers({
+            itemHeading: 'Hooks',
+            items: members.hooks,
+            itemsSeen: seenHooks,
+            linktoFn: LinktoHook,
+            sectionName: SECTION_TYPE.Hooks,
+        }),
+
+        [SECTION_TYPE.HooksPHP]: buildSidebarMembers({
+            itemHeading: 'PHP Actions & Filters',
+            items: members.hooks.filter((hook) => hook.fileType === 'PHP'),
+            itemsSeen: seenHooksPHP,
+            linktoFn: LinktoHook,
+            sectionName: SECTION_TYPE.HooksPHP,
+        }),
+
+        [SECTION_TYPE.HooksJS]: buildSidebarMembers({
+            itemHeading: 'JavaScript Actions & Filters',
+            items: members.hooks.filter((hook) => hook.fileType === 'JS'),
+            itemsSeen: seenHooksJS,
+            linktoFn: LinktoHook,
+            sectionName: SECTION_TYPE.HooksJS,
+        }),
+
     };
+
 
     sectionsOrder.forEach((section) => {
         if (SECTION_TYPE[section] !== undefined) {
@@ -645,6 +736,36 @@ function buildSidebar(members) {
     return nav;
 }
 
+
+const getMembers = function(data) {
+    // Get the helper module
+
+    // Call the original getMembers function to get the initial members object
+    const members = helper.getMembers(data);
+
+    // Add hooks to the members object
+    // This uses the same 'find' function that the original getMembers uses
+    members.hooks = helper.find(data, {kind: 'hook'});
+
+    // Return the modified members object
+    return members;
+};
+
+
+function createLink(doclet) {
+
+    const longname = doclet.longname;
+
+    if( doclet.kind === 'hook' ) {
+        fileUrl = helper.getUniqueFilename(longname);
+        helper.registerLink(longname, fileUrl);
+        return fileUrl;
+    }
+
+    return helper.createLink(doclet);
+}
+
+
 /**
     @param {TAFFY} taffyData See <http://taffydb.com/>.
     @param {object} opts
@@ -660,6 +781,7 @@ exports.publish = async function (taffyData, opts, tutorials) {
     let indexUrl;
     let interfaces;
     let members;
+    let hooks;
     let mixins;
     let modules;
     let namespaces;
@@ -756,6 +878,7 @@ exports.publish = async function (taffyData, opts, tutorials) {
         if (doclet.yields) {
             doclet.yields = getProcessedYield(doclet.yields);
         }
+
     });
 
     // update outdir if necessary, then create outdir
@@ -818,7 +941,8 @@ exports.publish = async function (taffyData, opts, tutorials) {
 
     data().each(function (doclet) {
         let docletPath;
-        const url = helper.createLink(doclet);
+
+        const url = createLink(doclet);
 
         helper.registerLink(doclet.longname, url);
 
@@ -862,9 +986,26 @@ exports.publish = async function (taffyData, opts, tutorials) {
             addAttribs(doclet);
             doclet.kind = 'member';
         }
+
+        if (doclet.kind === 'hook') {
+
+            doclet.parameters = ``;
+            if (doclet.params && doclet.params.length) {
+                doclet.parameters = `, `;
+                doclet.parameters += doclet.params
+                    .map((param) => {
+                        const typeNames = param.type?.names?.join('|');
+                        return `${param.name} <span class="type-signature">${typeNames}</span>`;
+                    })
+                    .join(', ');
+            }
+
+        }
+
     });
 
-    members = helper.getMembers(data);
+    members = getMembers(data);
+
     members.tutorials = tutorials.children;
 
     // output pretty-printed source files by default
@@ -908,7 +1049,12 @@ exports.publish = async function (taffyData, opts, tutorials) {
     if (themeOpts.prefixModuleToSidebarItems_experimental) {
         view.sidebar.sections.forEach((section, i) => {
             view.sidebar.sections[i].items = section.items.map((item) => {
-                item.anchor = prefixModuleToItemAnchor(item);
+                if( item.anchor ) {
+
+                    item.anchor = prefixModuleToItemAnchor(item);
+                } else {
+                    item.anchor = `<a href="#${item.name}">${item.name}</a>`;
+                }
 
                 return item;
             });
@@ -955,14 +1101,20 @@ exports.publish = async function (taffyData, opts, tutorials) {
     mixins = taffy(members.mixins);
     externals = taffy(members.externals);
     interfaces = taffy(members.interfaces);
+    hooks = taffy(members.hooks);
 
-    Object.keys(helper.longnameToUrl).forEach(async function (longname) {
+
+    for (const longname of Object.keys(helper.longnameToUrl)) {
         const myClasses = helper.find(classes, { longname: longname });
         const myExternals = helper.find(externals, { longname: longname });
         const myInterfaces = helper.find(interfaces, { longname: longname });
         const myMixins = helper.find(mixins, { longname: longname });
         const myModules = helper.find(modules, { longname: longname });
         const myNamespaces = helper.find(namespaces, { longname: longname });
+
+
+        const myHooks = helper.find(hooks, { longname: longname });
+
 
         if (myModules.length) {
             await generate(
@@ -1011,13 +1163,23 @@ exports.publish = async function (taffyData, opts, tutorials) {
                 helper.longnameToUrl[longname]
             );
         }
-    });
+
+        if (myHooks.length) {
+            //console.log(`Hook: ${myHooks[0].name}`);
+            await generate(
+                `Hook: ${myHooks[0].name}`,
+                myHooks,
+                helper.longnameToUrl[longname]
+            );
+        }
+    }
 
     // TODO: move the tutorial functions to templateHelper.js
     async function generateTutorial(title, tutorial, filename) {
+
         const tutorialData = {
             title: title,
-            header: tutorial.title,
+            header:  tutorialLongToName( tutorial.title ),
             content: tutorial.parse(),
             children: tutorial.children,
             filename,
@@ -1077,6 +1239,9 @@ exports.publish = async function (taffyData, opts, tutorials) {
 
     // tutorials can have only one parent so there is no risk for loops
     function saveChildren({ children }) {
+
+        //console.log('children : ', children);
+
         children.forEach(function (child) {
             generateTutorial(
                 `Tutorial: ${child.title}`,

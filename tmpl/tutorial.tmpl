@@ -1,8 +1,7 @@
 <section>
 
 <header>
-    
-    <h2><?js= header ?></h2>
+    <h1><?js= header ?></h1>
 </header>
 
 <article>
@@ -25,7 +24,7 @@
             let link = self.tutoriallink(t.name).replaceAll(/<a href=/g, "").replaceAll(/>.*/g,"")
     ?>
         <a href=<?js= link ?> class="child-tutorial">
-           <?js= t.name ?> 
+           <?js= t.name ?>
         </a>
     <?js }); ?>
 </div>

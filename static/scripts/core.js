@@ -377,6 +377,7 @@ function processAllPre() {
     var preMaxHeight = window.innerHeight - navbarHeight - footerHeight - 250;
 
     targets.forEach(function (pre, idx) {
+
         var parent = pre.parentNode;
 
         if (parent && parent.getAttribute('data-skip-pre-process') === 'true') {
@@ -386,7 +387,25 @@ function processAllPre() {
         var div = getPreDiv();
         var id = 'ScDloZOMdL' + idx;
 
+
         var lang = pre.getAttribute('data-lang') || 'code';
+
+        const language = pre.querySelector('code').getAttribute('class');
+        if (language) {
+
+            const classList = language.split(' ');
+            // Find the first class that starts with 'language-'
+            const languageClass = classList.find((cls) => cls.startsWith('language-'));
+
+            if (languageClass) {
+                // If we found a class that starts with 'language-', use it
+                lang = languageClass.replace('language-', '');
+            }
+            // If the code block has a language class, we can use it to set the data-lang attribute
+            pre.setAttribute('data-lang', lang);
+        }
+
+
         var topBar = getPreTopBar(id, lang);
 
         div.innerHTML = topBar;
@@ -668,22 +687,21 @@ function onDomContentLoaded() {
 
     // Highlighting code
 
-    // eslint-disable-next-line no-undef
-    hljs.addPlugin({
-        'after:highlightElement': function (obj) {
-            // Replace 'code' with result.language when
-            // we are able to cross-check the correctness of
-            // result.
-            obj.el.parentNode.setAttribute('data-lang', 'code');
-        },
-    });
+    // // eslint-disable-next-line no-undef
+    // hljs.addPlugin({
+    //     'after:highlightElement': function (obj) {
+    //         // Replace 'code' with result.language when
+    //         // we are able to cross-check the correctness of
+    //         // result.
+    //         obj.el.parentNode.setAttribute('data-lang', 'code');
+    //     },
+    // });
     // eslint-disable-next-line no-undef
     hljs.highlightAll();
     // eslint-disable-next-line no-undef
     hljs.initLineNumbersOnLoad({
         singleLine: true,
     });
-
     // Highlight complete
 
     initAccordion();

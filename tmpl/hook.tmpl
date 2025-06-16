@@ -1,7 +1,22 @@
 <?js
 var data = obj;
 var self = this;
+const language = data.fileType.toLowerCase();
+
 ?>
+
+<h3 class="name has-anchor" id="<?js= id ?>">
+      <?js= (data.hookType === 'filter' ? 'apply_filters' : 'do_action') ?>( '<?js= name ?>'<?js= data.parameters ?> )
+</h3>
+
+<pre class="prettyprint source lang-<?js= language ?>" data-language="<?js= language ?>">
+  <code><?js= (data.hookType === 'filter' ? 'add_filter' : 'add_action') ?>( '<?js= name ?>'<?js= data.parameters ?> )</code>
+</pre>
+
+<?js if (data.summary) { ?>
+    <div class="summary"><?js= summary ?></div>
+<?js } ?>
+
 
 <?js if (data.description) { ?>
     <div class="description">
@@ -17,17 +32,6 @@ var self = this;
 <?js } ?>
 
 <?js= this.partial('details.tmpl', data) ?>
-
-<?js if (data.requires && data.requires.length) { ?>
-    <div class="method-member-container flex flex-col w-100 overflow-auto mt-20">
-        <strong>Requires:</strong>
-        <ul>
-            <?js data.requires.forEach(function(r) { ?>
-                <li><?js= self.linkto(r) ?></li>
-            <?js }); ?>
-        </ul>
-    </div>
-<?js } ?>
 
 <?js if (data.returns && returns.length) { ?>
     <div class="method-member-container mt-20">

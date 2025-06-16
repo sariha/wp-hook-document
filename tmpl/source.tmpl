@@ -1,5 +1,6 @@
 <?js
     var data = obj;
+    var language = data.title.split('.').pop().toLowerCase();
 ?>
     <section id="source-page" class="source-page">
         <header>
@@ -8,6 +9,6 @@
             </h1>
         </header>
         <article>
-            <pre class="prettyprint source lang-js"><code><?js= data.code ?></code></pre>
+            <pre class="prettyprint source lang-<?js= language ?>"><code><?js= data.code ?></code></pre>
         </article>
     </section>

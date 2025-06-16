@@ -457,6 +457,10 @@ code {
 
 }
 
+.sidebar img {
+  margin: 0 auto;
+}
+
 .sidebar-title {
 	font-family: heading;
 	font-size: 1.5rem;

@@ -72,8 +72,14 @@ async function fetchAllData() {
 
   // eslint-disable-next-line no-undef
   const base = protocol + '//' + hostname + (port !== '' ? ':' + port : '') + baseURL;
+
+  console.log( base, 'baseURL', baseURL );
+
   // eslint-disable-next-line no-undef
   const url = new URL('data/search.json', base);
+
+  console.log( 'url',  url );
+
   const result = await fetch(url);
   const { list } = await result.json();
 
@@ -106,7 +112,7 @@ function onClickSearchItem(event) {
 function buildSearchResult(result) {
   let output = '';
   const removeHTMLTagsRegExp = /(<([^>]+)>)/ig;
-  
+
   for (const res of result) {
     const { title = '', description = '' } = res.item;
 

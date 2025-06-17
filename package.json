@@ -1,5 +1,5 @@
 {
-    "name": "clean-jsdoc-theme",
+    "name": "wp-hook-document",
     "version": "4.3.0",
     "description": "A beautifully crafted theme/template for JSDoc 3. This theme/template looks and feels like a premium theme/template. This is a fully mobile responsive theme and also fully customizable theme.",
     "main": "publish.js",
@@ -11,14 +11,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/ankitskvmdam/clean-jsdoc-theme.git"
+        "url": "git+https://github.com/sariha/wp-hook-document.git"
     },
     "author": "Ank",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/ankitskvmdam/clean-jsdoc-theme/issues"
+        "url": "https://github.com/sariha/wp-hook-document/issues"
     },
-    "homepage": "https://ankdev.me/clean-jsdoc-theme/v4/index.html",
+    "homepage": "https://github.com/sariha/wp-hook-document",
     "peerDependencies": {
         "jsdoc": ">=3.x <=4.x"
     },

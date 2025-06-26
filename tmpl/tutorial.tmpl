@@ -1,18 +1,10 @@
 <section>
-
-<header>
-    <h1><?js= header ?></h1>
-</header>
-
-<article>
-    <?js= content ?>
-</article>
-
+    <article>
+        <?js= content ?>
+    </article>
 </section>
 
-
 <?js= this.partial('include-target-script-and-styles.tmpl', filename) ?>
-
 
 <?js if (children.length > 0) { ?>
 <br><br>

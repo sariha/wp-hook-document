@@ -1,33 +1,51 @@
 <?js
-    var data = this.sidebar
+var data = this.sidebar
 
-    if(Array.isArray(data.sections)) {
+// Helper function to recursively render children
+function renderChildren(item, children) {
 
-        data.sections.forEach(function(section) {
-            if(section.items.length > 0) { ?>
+    var html = '';
 
-            <div class="sidebar-section-title with-arrow" data-isopen="false" id="<?js= section.id?>">
-                <div><?js= section.name ?></div>
-                <svg><use xlink:href="#down-icon"></use></svg>
-            </div>
-            <div class="sidebar-section-children-container">
+    if (!children || children.length === 0) return '';
 
-                <?js
-                section.items.forEach(function(item) {
-?>
-                    <div class="sidebar-section-children">
-                        <?js= item.anchor ?>
+    html += '<div class="sidebar-section-children-container-children">';
 
-                        <?js if(item.children.length > 0) { ?>
-                            <div class="sidebar-section-children-container-children">
-                              <?js item.children.forEach(function(child) { ?>
-                                <?js= child.anchor ?>
-                              <?js }); ?>
-                            </div>
-                        <?js } ?>
+    children.forEach(function(child) {
 
-                    </div>
-                <?js }) ?>
-            </div>
+        html += '<div class="sidebar-section-children">';
+        html += child.anchor ? child.anchor : `<a href="#${child.name}">${child.name}</a>`;
+
+        // Recursively render this child's children
+        if (child.children && child.children.length > 0) {
+            html += renderChildren(child, child.children);
+        }
+
+        html += '</div>';
+    });
+
+    html += '</div>';
+
+    return html;
+}
+
+if(Array.isArray(data.sections)) {
+    data.sections.forEach(function(section) {
+        if(section.items.length > 0) { ?>
+
+<div class="sidebar-section-title with-arrow" data-isopen="false" id="<?js= section.id?>">
+    <div><?js= section.name ?></div>
+    <svg><use xlink:href="#down-icon"></use></svg>
+</div>
+<div class="sidebar-section-children-container">
+
+    <?js section.items.forEach(function(item) { ?>
+        <div class="sidebar-section-children">
+            <?js= item.anchor ?>
+            <?js if(item.children.length > 0) { ?>
+                <?js= renderChildren(item, item.children) ?>
+            <?js } ?>
+        </div>
+    <?js }) ?>
+</div>
 
 <?js }})}?>

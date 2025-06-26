@@ -1,34 +1,89 @@
 'use strict';
 
-const markdown = require('jsdoc/util/markdown');
-
-/**
- *  Custom Markdown parser that modifies the source text before parsing.
- */
-const originalGetParser = markdown.getParser;
-
-// Remplacer la fonction getParser par notre version personnalisée
-markdown.getParser = function() {
-    // Obtenir le parser original
-    const originalParser = originalGetParser();
-
-    // Retourner une nouvelle fonction qui enveloppe le parser original
-    return function(source) {
-        // Augmenter les niveaux de titres dans le source (# -> ##, ## -> ###, etc.)
-        const modifiedSource = source.replace(/^(#{1,6})/gm, '#$1');
-
-        // Appeler le parser original avec le source modifié
-        return originalParser(modifiedSource);
-    };
-};
 
 /**
  * Only use comment blocks which has a @hook tag and simulate as @class.
  */
 
+const fs = require('jsdoc/lib/jsdoc/fs');
+// Monkey-patch resolver.load pour stocker le chemin du fichier
+const resolver = require('jsdoc/tutorial/resolver');
+const tutorial = require('jsdoc/tutorial');
+const path = require('path');
+const env = require('jsdoc/lib/jsdoc/env');
+
+
 exports.handlers = {
     parseBegin: function() {
-        // Rien à faire ici
+
+        const finder = /^(.*?)(?:\.(md|markdown|html|htm|xml|xhtml|json))$/i;
+
+        // Surcharge de la méthode load
+        resolver.load = function(filepath) {
+
+            let content;
+            let current;
+
+            let name;
+            let match;
+            let type;
+
+            const files = fs.ls(filepath, 3);
+
+            const pathFolder = path.basename(filepath);
+
+            // tutorials handling
+            files.forEach(file => {
+                match = file.match(finder);
+
+                // any filetype that can apply to tutorials
+                if (match) {
+
+                    const separator = path.sep;
+
+                    name = file
+                        .replace(pathFolder, '')
+                        .slice(1)
+                        .replace(/(\.md|\.markdown|\.html|\.htm|\.xml|\.xhtml|\.json)$/i, '')
+                        .replace(new RegExp(`\\${separator}`, 'g'), '/');
+
+
+
+                    content = fs.readFileSync(file, env.opts.encoding || 'utf8');
+
+                    switch (match[2].toLowerCase()) {
+                        // HTML type
+                        case 'xml':
+                        case 'xhtml':
+                        case 'html':
+                        case 'htm':
+                            type = tutorial.TYPES.HTML;
+                            break;
+
+                        // Markdown typs
+                        case 'md':
+                        case 'markdown':
+                            type = tutorial.TYPES.MARKDOWN;
+                            break;
+
+                        // how can it be? check `finder' regexp
+                        // not a file we want to work with
+                        default:
+                            return;
+                    }
+
+                    current = new tutorial.Tutorial(name, content, type);
+
+                    current.path = file;
+
+                    resolver.addTutorial(current);
+                }
+            });
+
+
+
+
+        };
     },
     beforeParse: function(e) {
         // a JSDoc comment looks like: /**[one or more chars]*/

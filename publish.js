@@ -70,7 +70,7 @@ function find(spec) {
 
 function tutorialLongToName(tutorial ) {
     //replace _ or - with space in the tutorial name
-    let content = tutorial.replace(/_/g, ' ').replace(/-/g, ' ');
+    let content = tutorial.replace(/_/g, ' ');
 
     // Remove any leading numbers and dots (e.g., "1.", "2.")
     content = content.replace(/^\d+\.*/, '');
@@ -79,7 +79,7 @@ function tutorialLongToName(tutorial ) {
         .split(' ')
         .map((word) => {
             // Remove any leading numbers and dots (e.g., "1.", "2.")
-            word.replace(/^\d+\.*/, '');
+            word = word.replace(/^\d+\.*/, '');
             // Capitalize the first letter of each word
             return word.charAt(0).toUpperCase() + word.slice(1);
         })
@@ -460,54 +460,13 @@ function buildSidebarMembers({
     };
 
     if (items.length) {
-        // Si nous traitons des tutoriels, créer une structure hiérarchique basée sur les tirets
+
         if (sectionName === SECTION_TYPE.Tutorials) {
-            // Créer un objet pour stocker les catégories parentes
             const parentCategories = {};
-
             items.forEach(function (item) {
-                // Vérifier si le nom contient un tiret
-                if (item.name.includes('-')) {
-                    // Diviser le nom par le tiret
-                    const parts = item.name.split('-');
-                    const parentName = tutorialLongToName( parts[0].trim() ); // Premier élément comme parent
-                    const childName = parts.slice(1).join('-').trim(); // Le reste comme enfant
-
-                    // Créer la catégorie parente si elle n'existe pas encore
-                    if (!parentCategories[parentName]) {
-                        parentCategories[parentName] = {
-                            name: parentName,
-                            anchor: '', // Pas de lien pour la catégorie parente
-                            children: [],
-                            type: '',
-                        };
-                        navProps.items.push(parentCategories[parentName]);
-                    }
-
-                    // Ajouter l'élément enfant à la catégorie parente
-                    parentCategories[parentName].children.push({
-                        // remove the prefix parentName from childName
-                        name: childName,
-                        anchor: item.longname
-                            ? linktoFn(item.longname, childName)
-                            : linktoFn('', item.name),
-                        children: [],
-                        type: item.hookType ? item.hookType : '',
-                    });
-                } else {
-                    // Pour les éléments sans tiret, les ajouter normalement
-                    const currentItem = {
-                        name: item.name,
-                        anchor: item.longname
-                            ? linktoFn(item.longname, item.name)
-                            : linktoFn('', item.name),
-                        children: [],
-                        type: item.hookType ? item.hookType : '',
-                    };
-
-                    navProps.items.push(currentItem);
-                }
+                buildTutorialsList( item, navProps, linktoFn, parentCategories );
             });
+
         } else {
             // Pour les sections autres que les tutoriels, conserver le comportement d'origine
             items.forEach(function (item) {
@@ -526,6 +485,66 @@ function buildSidebarMembers({
     }
 
     return navProps;
+}
+
+function buildTutorialsList(item, navProps, linktoFn, parentCategories) {
+    const folderSeparator = '/';
+
+    // Pour les éléments sans slash, les ajouter normalement
+    if (!item.name.includes(folderSeparator)) {
+        const currentItem = {
+            name: item.name,
+            anchor: item.longname
+                ? linktoFn(item.longname, item.name)
+                : linktoFn('', item.name),
+            children: [],
+            type: item.hookType ? item.hookType : '',
+        };
+
+        navProps.items.push(currentItem);
+        return;
+    }
+
+    // Pour les éléments avec slash, créer une structure arborescente
+    const parts = item.name.split(folderSeparator);
+    let currentLevel = navProps.items;
+    let currentPath = '';
+
+    // Parcourir chaque partie du chemin
+    for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+        const isLastPart = i === parts.length - 1;
+        const hasChildren = !isLastPart;
+        const displayName = tutorialLongToName(part);
+
+        // Construire le chemin actuel
+        currentPath = currentPath ? `${currentPath}${folderSeparator}${part}` : part;
+
+        // Chercher si cette partie existe déjà au niveau actuel
+        let existingItem = currentLevel.find(item => item.name === displayName);
+
+        if (!existingItem) {
+            // Créer un nouvel élément pour cette partie
+            existingItem = {
+                name: displayName,
+                // Seule la dernière partie a un lien, les autres sont des dossiers
+                anchor: hasChildren ? '' : (item.longname
+                        ? linktoFn(item.longname, displayName)
+                        : linktoFn('', item.name)),
+                children: [],
+                type: '',
+            };
+
+            currentLevel.push(existingItem);
+        }
+
+        // Passer au niveau suivant pour la prochaine partie
+        currentLevel = existingItem.children;
+    }
+}
+
+function addTutorialsToMenuRecursive(tutorials, menu) {
+
 }
 
 function buildSearchListForData() {
@@ -1050,7 +1069,6 @@ exports.publish = async function (taffyData, opts, tutorials) {
         view.sidebar.sections.forEach((section, i) => {
             view.sidebar.sections[i].items = section.items.map((item) => {
                 if( item.anchor ) {
-
                     item.anchor = prefixModuleToItemAnchor(item);
                 } else {
                     item.anchor = `<a href="#${item.name}">${item.name}</a>`;
@@ -1165,7 +1183,6 @@ exports.publish = async function (taffyData, opts, tutorials) {
         }
 
         if (myHooks.length) {
-            //console.log(`Hook: ${myHooks[0].name}`);
             await generate(
                 `Hook: ${myHooks[0].name}`,
                 myHooks,
@@ -1174,7 +1191,6 @@ exports.publish = async function (taffyData, opts, tutorials) {
         }
     }
 
-    // TODO: move the tutorial functions to templateHelper.js
     async function generateTutorial(title, tutorial, filename) {
 
         const tutorialData = {
@@ -1240,7 +1256,6 @@ exports.publish = async function (taffyData, opts, tutorials) {
     // tutorials can have only one parent so there is no risk for loops
     function saveChildren({ children }) {
 
-        //console.log('children : ', children);
 
         children.forEach(function (child) {
             generateTutorial(

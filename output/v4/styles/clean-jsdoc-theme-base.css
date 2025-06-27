@@ -519,9 +519,15 @@ code {
 	overflow: hidden;
 }
 
-.sidebar-section-children-container-children {
-  margin-left: 10px;
+.sidebar-section-children {
+	margin-left: 10px;
 }
+
+.children {
+	margin-left: 15px;
+}
+
+
 
 .sidebar-section-children .hook-type {
   border: solid 1px;
@@ -532,14 +538,36 @@ code {
 
 .sidebar-section-children a {
 	display: block;
-	padding: 0.25rem 2rem;
+	padding: 0.15rem 0.75rem;
 	width: 100%;
-
 }
 
 .sidebar-section-children a {
 	text-decoration: none;
+}
 
+.menu-accordion > a {
+	font-weight: bold;
+	padding-left: 0;
+}
+
+.menu-accordion a:first-child svg {
+	height: 1rem;
+	transition: transform 0.3s;
+	width: 1rem;
+}
+
+.menu-accordion a:first-child[data-isopen='false'] svg {
+	transform: rotate(-90deg);
+}
+
+.menu-accordion a:first-child[data-isopen='false'] + .children {
+	height: 0;
+	overflow: hidden;
+}
+
+.menu-accordion a:first-child[data-isopen='true'] + .children {
+	height: auto;
 }
 
 .with-arrow[data-isopen='false'] + .sidebar-section-children-container {

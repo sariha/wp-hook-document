@@ -4,26 +4,24 @@ var data = this.sidebar
 // Helper function to recursively render children
 function renderChildren(item, children) {
 
-    var html = '';
-
     if (!children || children.length === 0) return '';
 
-    html += '<div class="sidebar-section-children-container-children">';
-
+    var html = '';
     children.forEach(function(child) {
 
-        html += '<div class="sidebar-section-children">';
-        html += child.anchor ? child.anchor : `<a href="#${child.name}">${child.name}</a>`;
+        var hasChildren = child.children && child.children.length > 0;
+
+        html += '<div class="sidebar-section-children ' + (hasChildren ? 'menu-accordion' : '') + '">';
+        html += child.anchor && !hasChildren ? child.anchor : `<a href="#${child.name}" id="menu-${child.name}" data-isopen="false"> <svg><use xlink:href="#down-icon"></use></svg> ${child.name}</a>`;
 
         // Recursively render this child's children
-        if (child.children && child.children.length > 0) {
+        if (hasChildren) {
+            html += '<div class="children" >';
             html += renderChildren(child, child.children);
+            html += `</div>\n`;
         }
-
         html += '</div>';
     });
-
-    html += '</div>';
 
     return html;
 }
@@ -37,15 +35,7 @@ if(Array.isArray(data.sections)) {
     <svg><use xlink:href="#down-icon"></use></svg>
 </div>
 <div class="sidebar-section-children-container">
-
-    <?js section.items.forEach(function(item) { ?>
-        <div class="sidebar-section-children">
-            <?js= item.anchor ?>
-            <?js if(item.children.length > 0) { ?>
-                <?js= renderChildren(item, item.children) ?>
-            <?js } ?>
-        </div>
-    <?js }) ?>
+    <?js= renderChildren('', section.items) ?>
 </div>
 
 <?js }})}?>

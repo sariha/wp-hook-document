@@ -94,6 +94,8 @@ function setAccordionIdToLocalStorage(id) {
      */
     var ids = JSON.parse(localStorage.getItem(accordionLocalStorageKey));
 
+    console.log('Add: ', id);
+
     ids[id] = id;
     localStorage.setItem(accordionLocalStorageKey, JSON.stringify(ids));
 }
@@ -107,6 +109,8 @@ function removeAccordionIdFromLocalStorage(id) {
      * @type {object}
      */
     var ids = JSON.parse(localStorage.getItem(accordionLocalStorageKey));
+
+    console.log('Remove: ', id);
 
     delete ids[id];
     localStorage.setItem(accordionLocalStorageKey, JSON.stringify(ids));
@@ -128,6 +132,7 @@ function getAccordionIdsFromLocalStorage() {
 
 function toggleAccordion(element) {
     var currentNode = element;
+
     var isCollapsed = currentNode.getAttribute('data-isopen') === 'false';
 
     if (isCollapsed) {
@@ -146,7 +151,7 @@ function initAccordion() {
     ) {
         localStorage.setItem(accordionLocalStorageKey, '{}');
     }
-    var allAccordion = document.querySelectorAll('.sidebar-section-title');
+    var allAccordion = document.querySelectorAll('.sidebar-section-title, .menu-accordion a');
     var ids = getAccordionIdsFromLocalStorage();
 
     allAccordion.forEach(function (item) {
@@ -377,8 +382,6 @@ function processAllPre() {
     var preMaxHeight = window.innerHeight - navbarHeight - footerHeight - 250;
 
     targets.forEach(function (pre, idx) {
-
-        console.log( 'processAllPre: pre', pre );
 
         var parent = pre.parentNode;
 

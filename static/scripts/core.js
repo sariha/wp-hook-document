@@ -93,9 +93,6 @@ function setAccordionIdToLocalStorage(id) {
      * @type {object}
      */
     var ids = JSON.parse(localStorage.getItem(accordionLocalStorageKey));
-
-    console.log('Add: ', id);
-
     ids[id] = id;
     localStorage.setItem(accordionLocalStorageKey, JSON.stringify(ids));
 }
@@ -109,8 +106,6 @@ function removeAccordionIdFromLocalStorage(id) {
      * @type {object}
      */
     var ids = JSON.parse(localStorage.getItem(accordionLocalStorageKey));
-
-    console.log('Remove: ', id);
 
     delete ids[id];
     localStorage.setItem(accordionLocalStorageKey, JSON.stringify(ids));

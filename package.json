@@ -1,7 +1,7 @@
 {
     "name": "wp-hook-document",
-    "version": "4.3.0",
-    "description": "A beautifully crafted theme/template for JSDoc 3. This theme/template looks and feels like a premium theme/template. This is a fully mobile responsive theme and also fully customizable theme.",
+    "version": "5.0.0",
+    "description": "Hook documentation generator for WordPress, based on JSDoc and clean-jsdoc-theme.",
     "main": "publish.js",
     "scripts": {
         "build": "node minify.js && node node_modules/jsdoc/jsdoc.js -c jsdoc-config.json",

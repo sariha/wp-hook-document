@@ -28,7 +28,7 @@ exports.handlers = {
             let match;
             let type;
 
-            const files = fs.ls(filepath, 3);
+            const files = fs.ls(filepath, 6);
 
             const pathFolder = path.basename(filepath);
 
